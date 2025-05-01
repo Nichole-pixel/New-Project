@@ -1,4 +1,9 @@
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import javax.swing.JOptionPane;
 
 /*
@@ -27,12 +32,36 @@ public class SignIn extends javax.swing.JFrame {
         jPasswordField2.setEnabled(true);
         jButton1.setEnabled(true);
         jButton2.setEnabled(true);
-        
-        
-        
-        
-        
-        
+    }
+    
+    // MySQL Connection Details
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/user";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "";
+
+    private Connection connectToDatabase() {
+        try {
+            return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Database connection failed: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
+    }
+
+    private boolean authenticate(String username, String password, String position) {
+        String query = "SELECT * FROM users_table WHERE username = ? AND password = ? AND position = ?";
+        try (Connection conn = connectToDatabase();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, username);
+            stmt.setString(2, password);
+            stmt.setString(3, position);
+
+            ResultSet rs = stmt.executeQuery();
+            return rs.next();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Login failed: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
     }
 
     /**
@@ -265,8 +294,10 @@ public class SignIn extends javax.swing.JFrame {
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         // TODO add your handling code here:
-        jTextField1.setText(null);
-        jPasswordField2.setText(null);
+        // Clear inputs
+        jTextField1.setText("");
+        jPasswordField2.setText("");
+        jComboBox1.setSelectedIndex(0);
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void signupbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_signupbuttonActionPerformed
@@ -293,18 +324,17 @@ public class SignIn extends javax.swing.JFrame {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
-        if(jTextField1.getText().equals("Admin")&&jPasswordField2.getText().equals("12345")){
-            JOptionPane.showMessageDialog(null,"Login Succes!!");
+        String username = jTextField1.getText();
+        String password = new String(jPasswordField2.getPassword());
+        String position = (String) jComboBox1.getSelectedItem();
+
+        if (authenticate(username, password, position)) {
+            JOptionPane.showMessageDialog(this, "Login successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
+            // Proceed to the next screen or operation
             new Setofadmin().setVisible(true);
             this.setVisible(false);
-            
-        }
-        else{
-            JOptionPane.showMessageDialog(null,"Login Failed!!");
-            jTextField1.setText(null);
-            jPasswordField2.setText(null);
-            
-            
+        } else {
+            JOptionPane.showMessageDialog(this, "Invalid username, password, or position.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_jButton1ActionPerformed
 

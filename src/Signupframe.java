@@ -1,5 +1,9 @@
 
 import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import javax.swing.JOptionPane;
 import java.sql.Statement;
 
 /*
@@ -16,12 +20,74 @@ public class Signupframe extends javax.swing.JFrame {
     /**
      * Creates new form Signupframe
      */
+    Connection con;
+
     public Signupframe() {
         initComponents();
+        connectToDatabase();
     }
     
-    Connection con;
-    Statement st; 
+     // Method to connect to the database
+    public void connectToDatabase() {
+        try {
+            // Replace these with your database credentials
+            String url = "jdbc:mysql://localhost:3306/user";
+            String user = "root";
+            String password = "";
+
+            con = DriverManager.getConnection(url, user, password);
+            System.out.println("Connected to the database successfully!");
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Failed to connect to the database: " + e.getMessage());
+        }
+    }
+
+    // Method to handle signup
+    private void signUp() {
+        String position = jComboBox1.getSelectedItem().toString().trim();
+        String username = jTextField1.getText().trim();
+        String password = new String(jPasswordField1.getPassword());
+        String confirmPassword = new String(jPasswordField2.getPassword());
+
+        // Basic validation
+        if (position.isEmpty() || username.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "All fields are required!");
+            return;
+        }
+
+        if (!password.equals(confirmPassword)) {
+            JOptionPane.showMessageDialog(this, "Passwords do not match!");
+            return;
+        }
+
+        try {
+            // SQL query to insert user data
+            String query = "INSERT INTO users_table (position, userName, password) VALUES (?, ?, ?)";
+            PreparedStatement pst = con.prepareStatement(query);
+            pst.setString(1, position);
+            pst.setString(2, username);
+            pst.setString(3, password);
+
+            int rowsAffected = pst.executeUpdate();
+            if (rowsAffected > 0) {
+                JOptionPane.showMessageDialog(this, "Signup successful!");
+                clearFields();
+            } else {
+                JOptionPane.showMessageDialog(this, "Signup failed!");
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "Error during signup: " + e.getMessage());
+        }
+    }
+    
+        // Method to clear the input fields
+    private void clearFields() {
+        jComboBox1.setSelectedIndex(0);
+        jTextField1.setText("");
+        jPasswordField1.setText("");
+        jPasswordField2.setText("");
+    }
+
     
     public void Connection(){
     
@@ -195,14 +261,14 @@ public class Signupframe extends javax.swing.JFrame {
                     .addComponent(jPasswordField2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel8, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jButton2)
                     .addComponent(jButton1))
                 .addGap(18, 18, 18)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel9)
                     .addComponent(jButton4))
-                .addGap(0, 18, Short.MAX_VALUE))
+                .addGap(0, 19, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -259,14 +325,12 @@ public class Signupframe extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        jTextField1.setText(null);
-        jPasswordField1.setText(null);
-        jPasswordField2.setText(null);
+         clearFields();
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
-        
+        signUp();
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
