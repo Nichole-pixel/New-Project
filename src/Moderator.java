@@ -7,6 +7,9 @@
  *
  * @author LENOVO
  */
+import java.sql.*;
+import javax.swing.table.DefaultTableModel;
+
 public class Moderator extends javax.swing.JFrame {
 
     /**
@@ -14,6 +17,38 @@ public class Moderator extends javax.swing.JFrame {
      */
     public Moderator() {
         initComponents();
+        loadData();
+    }
+    // Method to fetch and display data in JTable
+    private void loadData() {
+        String url = "jdbc:mysql://localhost:3306/barangay_requests"; // Update with your DB details
+        String user = "root"; // Update with your DB username
+        String password = ""; // Update with your DB password
+
+        String query = "SELECT id, first_name, last_name, document_type, created_at FROM requests"; // Update with your table and columns
+        try (Connection con = DriverManager.getConnection(url, user, password);
+             Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+
+            // Define column headers
+            String[] columnNames = {"No.", "Name", "Document", "Date"};
+            DefaultTableModel model = new DefaultTableModel(columnNames, 0);
+
+            // Populate rows from the ResultSet
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String name = rs.getString("first_name");
+                String document = rs.getString("document_type");
+                String date = rs.getString("created_at"); // Ensure date is in the desired format
+                model.addRow(new Object[]{id, name, document, date});
+            }
+
+            // Set the model to the JTable
+            jTable1.setModel(model);
+
+        } catch (SQLException e) {
+            e.printStackTrace(); // For debugging; consider using a logger
+        }
     }
 
     /**

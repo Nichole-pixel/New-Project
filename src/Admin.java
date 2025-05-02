@@ -7,6 +7,9 @@
  *
  * @author LENOVO
  */
+import java.sql.*;
+import javax.swing.table.DefaultTableModel;
+
 public class Admin extends javax.swing.JFrame {
 
     /**
@@ -14,8 +17,40 @@ public class Admin extends javax.swing.JFrame {
      */
     public Admin() {
         initComponents();
+        loadData(); 
     }
 
+    // Method to fetch and display data in JTable
+    private void loadData() {
+        String url = "jdbc:mysql://localhost:3306/barangay_requests"; // Update with your DB details
+        String user = "root"; // Update with your DB username
+        String password = ""; // Update with your DB password
+
+        String query = "SELECT id, first_name, last_name, document_type, created_at FROM requests"; // Update with your table and columns
+        try (Connection con = DriverManager.getConnection(url, user, password);
+             Statement stmt = con.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+
+            // Define column headers
+            String[] columnNames = {"No.", "Name", "Document", "Date"};
+            DefaultTableModel model = new DefaultTableModel(columnNames, 0);
+
+            // Populate rows from the ResultSet
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String name = rs.getString("first_name");
+                String document = rs.getString("document_type");
+                String date = rs.getString("created_at"); // Ensure date is in the desired format
+                model.addRow(new Object[]{id, name, document, date});
+            }
+
+            // Set the model to the JTable
+            jTable1.setModel(model);
+
+        } catch (SQLException e) {
+            e.printStackTrace(); // For debugging; consider using a logger
+        }
+    }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -232,7 +267,35 @@ public class Admin extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        // TODO add your handling code here:
+        // TODO add your handling delete code here:
+        int selectedRow = jTable1.getSelectedRow(); // Get the selected row
+        if (selectedRow != -1) {
+            int id = (int) jTable1.getValueAt(selectedRow, 0); // Get the ID from the table
+
+            String url = "jdbc:mysql://localhost:3306/barangay_requests";
+            String user = "root";
+            String password = "";
+
+            String query = "DELETE FROM requests WHERE id = ?";
+
+            try (Connection con = DriverManager.getConnection(url, user, password);
+                 PreparedStatement pstmt = con.prepareStatement(query)) {
+
+                pstmt.setInt(1, id); // Set the ID
+                int affectedRows = pstmt.executeUpdate();
+
+                if (affectedRows > 0) {
+                    DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+                    model.removeRow(selectedRow); // Remove the row from the JTable
+                    javax.swing.JOptionPane.showMessageDialog(this, "Record deleted successfully.");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                javax.swing.JOptionPane.showMessageDialog(this, "Error deleting record: " + e.getMessage());
+            }
+        } else {
+            javax.swing.JOptionPane.showMessageDialog(this, "Please select a record to delete.");
+        }
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
@@ -252,7 +315,47 @@ public class Admin extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
-        // TODO add your handling code here:
+        // TODO add your handling for the update code here:
+           int selectedRow = jTable1.getSelectedRow(); // Get the selected row
+    if (selectedRow != -1) {
+        int id = (int) jTable1.getValueAt(selectedRow, 0); // Get the ID from the table
+        String currentName = (String) jTable1.getValueAt(selectedRow, 1);
+        String currentDocument = (String) jTable1.getValueAt(selectedRow, 2);
+
+        // Prompt for new values
+        String newName = javax.swing.JOptionPane.showInputDialog(this, "Enter new name:", currentName);
+        String newDocument = javax.swing.JOptionPane.showInputDialog(this, "Enter new document type:", currentDocument);
+
+        if (newName != null && newDocument != null) {
+            String url = "jdbc:mysql://localhost:3306/barangay_requests";
+            String user = "root";
+            String password = "";
+            
+            String query = "UPDATE requests SET first_name = ?, document_type = ? WHERE id = ?";
+            
+            try (Connection con = DriverManager.getConnection(url, user, password);
+                 PreparedStatement pstmt = con.prepareStatement(query)) {
+                 
+                pstmt.setString(1, newName);
+                pstmt.setString(2, newDocument);
+                pstmt.setInt(3, id); // Set the ID
+                
+                int affectedRows = pstmt.executeUpdate();
+                
+                if (affectedRows > 0) {
+                    DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+                    model.setValueAt(newName, selectedRow, 1); // Update JTable
+                    model.setValueAt(newDocument, selectedRow, 2);
+                    javax.swing.JOptionPane.showMessageDialog(this, "Record updated successfully.");
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                javax.swing.JOptionPane.showMessageDialog(this, "Error updating record: " + e.getMessage());
+            }
+        }
+    } else {
+        javax.swing.JOptionPane.showMessageDialog(this, "Please select a record to update.");
+    }
     }//GEN-LAST:event_jButton5ActionPerformed
 
     /**

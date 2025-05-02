@@ -59,7 +59,7 @@ public class RequestForm extends javax.swing.JFrame {
             return;
         }
 
-        String query = "INSERT INTO requests (last_name, first_name, middle_name, name_ex, age, date_of_birth, address, document_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String query = "INSERT INTO requests (last_name, first_name, middle_name, name_ex, age, date_of_birth, address, document_type, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = connectToDatabase(); PreparedStatement stmt = conn.prepareStatement(query)) {
             stmt.setString(1, lastName);
@@ -70,6 +70,7 @@ public class RequestForm extends javax.swing.JFrame {
             stmt.setString(6, dob);
             stmt.setString(7, address);
             stmt.setString(8, documentType);
+            stmt.setTimestamp(9, new java.sql.Timestamp(System.currentTimeMillis()));
             stmt.executeUpdate();
             JOptionPane.showMessageDialog(this, "Data saved successfully.");
         } catch (SQLException ex) {
